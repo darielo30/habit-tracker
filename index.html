@@ -389,7 +389,8 @@ function fmtDate(dt){return`${DWF[dt.getDay()]}, ${dt.getDate()}. ${MO[dt.getMon
 /* CONFETTI */
 function checkConfetti(y,m,d){
   if(!isT(y,m,d))return;
-  if(!HABITS.every(h=>done(h,y,m,d)))return;
+  const doneCnt=HABITS.filter(h=>done(h,y,m,d)).length;
+  if(doneCnt<9)return;
   const ck=`hf4_conf_${y}_${m}_${d}`;
   if(localStorage.getItem(ck))return;
   localStorage.setItem(ck,'1');
