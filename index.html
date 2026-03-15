@@ -73,9 +73,9 @@
     .brand{display:flex;align-items:center;gap:10px;padding:0 6px;margin-bottom:30px}
     .brand-icon{
       width:36px;height:36px;border-radius:10px;flex-shrink:0;
-      background:linear-gradient(135deg,#7acc00,#b6ff56);
-      display:flex;align-items:center;justify-content:center;font-size:18px;
-      box-shadow:0 0 16px rgba(182,255,86,0.4),0 2px 8px rgba(0,0,0,0.4);
+      background:#1d2125;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 0 16px rgba(182,255,86,0.35),0 2px 8px rgba(0,0,0,0.5),inset 0 0 0 1px rgba(182,255,86,0.18);
     }
     .brand-name{
       font-size:15px;font-weight:800;
@@ -612,7 +612,13 @@
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="brand">
-    <div class="brand-icon">🌙</div>
+    <div class="brand-icon">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
+        <circle cx="10" cy="9"  r="6.5" fill="#b6ff56"/>
+        <circle cx="23" cy="12" r="5.5" fill="#b6ff56"/>
+        <circle cx="12" cy="23" r="6.5" fill="#b6ff56"/>
+      </svg>
+    </div>
     <div><div class="brand-name">HabitFlow</div><div class="brand-sub">Dariel</div></div>
   </div>
   <div class="nav-section">
