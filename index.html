@@ -216,6 +216,11 @@
       background:linear-gradient(135deg,var(--text) 60%,var(--text2));
       -webkit-background-clip:text;-webkit-text-fill-color:transparent;
     }
+    .card-ttl .ttl-ico{
+      -webkit-text-fill-color:initial;
+      background:none;-webkit-background-clip:unset;
+      margin-right:2px;
+    }
     .badge{
       padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;
       background:var(--g-dim);color:var(--g);
@@ -566,6 +571,18 @@
     }
     .bv-ring-outer{animation:ringPulseOuter 3s ease-in-out infinite}
 
+    /* ── STREAK FLAME + THERMOMETER ── */
+    .streak-flame{
+      display:inline-block;
+      animation:floatFlame 2s ease-in-out infinite;
+      filter:drop-shadow(0 0 5px rgba(249,115,22,0.8)) drop-shadow(0 0 12px rgba(251,191,36,0.4));
+    }
+    @keyframes floatFlame{
+      0%,100%{transform:translateY(0) scale(1)}
+      50%{transform:translateY(-3px) scale(1.12)}
+    }
+    .streak-thermo{flex-shrink:0;align-self:center;margin-left:6px;overflow:visible}
+
     /* ── ANIMATIONS ── */
     @keyframes fadeSlideUp{
       from{opacity:0;transform:translateY(14px)}
@@ -664,7 +681,7 @@
   <div class="summary-bar" id="summaryBar"></div>
   <div class="stats-scroll"><div class="stats-row" id="statsRow"></div></div>
   <div class="card">
-    <div class="card-hdr"><span class="card-ttl">📋 Monatsübersicht</span><span class="badge">📝 Tag anklicken für Notiz</span></div>
+    <div class="card-hdr"><span class="card-ttl"><span class="ttl-ico">📋</span> Monatsübersicht</span><span class="badge">📝 Tag anklicken für Notiz</span></div>
     <div class="card-body-split">
       <div class="grid-scroll"><div id="gridWrap"></div></div>
 
@@ -770,11 +787,11 @@
     </div>
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-ttl">✅ Wöchentliche To-Dos</span><span class="badge">10 pro Woche</span></div>
+    <div class="card-hdr"><span class="card-ttl"><span class="ttl-ico">✅</span> Wöchentliche To-Dos</span><span class="badge">10 pro Woche</span></div>
     <div class="todo-grid" id="todoGrid"></div>
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-ttl">🌡️ Jahres-Heatmap</span><span class="badge" id="heatYear"></span></div>
+    <div class="card-hdr"><span class="card-ttl"><span class="ttl-ico">🌡️</span> Jahres-Heatmap</span><span class="badge" id="heatYear"></span></div>
     <div class="heatmap-wrap" id="heatWrap"></div>
   </div>
 </main>
@@ -1067,9 +1084,53 @@ function closeReview(){document.getElementById('reviewModal').style.display='non
 /* RENDERERS */
 function renderSummary(){
   const td=totalDone(),bs=bestStreak(),{pct}=overallPct(),mc=mostConsistent();
+
+  // Thermometer: 30 days = 100 %
+  const fillPct=Math.min(100,Math.round(bs/30*100));
+  // Tube: y=4 height=40 → bottom at y=44
+  const fh=parseFloat((40*fillPct/100).toFixed(2));
+  const fy=parseFloat((44-fh).toFixed(2));
+
+  // Color scale: cool lime → amber → orange → red
+  let topColor,bulbColor;
+  if(bs>=21){topColor='#ef4444';bulbColor='#dc2626';}
+  else if(bs>=14){topColor='#f97316';bulbColor='#ea580c';}
+  else if(bs>=7) {topColor='#fbbf24';bulbColor='#d97706';}
+  else if(bs>=3) {topColor='#b6ff56';bulbColor='#7acc00';}
+  else           {topColor='rgba(255,255,255,0.15)';bulbColor='rgba(255,255,255,0.1)';}
+
+  const thermometer=`
+    <svg class="streak-thermo" viewBox="0 0 22 60" width="22" height="60" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="tgrad" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="${bulbColor}"/>
+          <stop offset="100%" stop-color="${topColor}"/>
+        </linearGradient>
+        <clipPath id="tclip"><rect x="7" y="4" width="8" height="40" rx="4"/></clipPath>
+      </defs>
+      <!-- tube background -->
+      <rect x="7" y="4" width="8" height="40" rx="4" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.09)" stroke-width="0.6"/>
+      <!-- fill -->
+      ${fh>0.5?`<rect x="7" y="${fy}" width="8" height="${fh}" rx="3" fill="url(#tgrad)" clip-path="url(#tclip)"/>`:''}
+      <!-- tick marks at 75 %, 50 %, 25 % -->
+      <line x1="15" y1="14" x2="18" y2="14" stroke="rgba(255,255,255,0.22)" stroke-width="0.8"/>
+      <line x1="15" y1="24" x2="19" y2="24" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/>
+      <line x1="15" y1="34" x2="18" y2="34" stroke="rgba(255,255,255,0.22)" stroke-width="0.8"/>
+      <!-- bulb glow halo -->
+      ${bs>0?`<circle cx="11" cy="52" r="8" fill="${bulbColor}" opacity="0.2"/>`:''}
+      <!-- bulb outer ring -->
+      <circle cx="11" cy="52" r="7" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
+      <!-- bulb fill -->
+      <circle cx="11" cy="52" r="5" fill="${bs>0?bulbColor:'rgba(255,255,255,0.08)'}"/>
+    </svg>`;
+
   document.getElementById('summaryBar').innerHTML=`
     <div class="sitem"><div class="sicon">✅</div><div><div class="sval">${td}</div><div class="slbl">Erledigte Gewohnheiten</div></div></div>
-    <div class="sitem"><div class="sicon">🔥</div><div><div class="sval">${bs}</div><div class="slbl">Bester Streak</div></div></div>
+    <div class="sitem">
+      <div class="sicon ${bs>0?'streak-flame':''}">🔥</div>
+      <div><div class="sval">${bs}</div><div class="slbl">Bester Streak</div></div>
+      ${thermometer}
+    </div>
     <div class="sitem"><div class="sicon">📊</div><div><div class="sval">${pct}%</div><div class="slbl">Gesamtquote</div></div></div>
     ${mc?`<div class="sitem"><div class="sicon">${mc.emoji}</div><div><div class="sval" style="font-size:13px">${mc.name}</div><div class="slbl">Konstanteste Gewohnheit</div></div></div>`:''}
   `
