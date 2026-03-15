@@ -367,9 +367,18 @@
     .act-item:last-child{margin-bottom:0}
     .act-item:hover{border-color:rgba(182,255,86,.2);transform:translateX(2px);background:rgba(44,51,59,0.8)}
     .act-ico{
-      width:34px;height:34px;border-radius:10px;
+      width:34px;height:34px;border-radius:10px;flex-shrink:0;
       display:flex;align-items:center;justify-content:center;
-      font-size:16px;flex-shrink:0;
+      font-size:17px;
+      background:rgba(182,255,86,0.08);
+      border:1px solid rgba(182,255,86,0.22);
+      box-shadow:0 0 10px rgba(182,255,86,0.06);
+      transition:all .2s ease;
+    }
+    .act-item:hover .act-ico{
+      background:rgba(182,255,86,0.14);
+      border-color:rgba(182,255,86,0.38);
+      box-shadow:0 0 14px rgba(182,255,86,0.18);
     }
     .act-name{font-size:12px;font-weight:600}
     .act-time{font-size:10px;color:var(--muted);margin-top:2px}
@@ -506,18 +515,13 @@
     .card-body-split{display:flex;align-items:stretch}
     .grid-scroll{flex:1;min-width:0;overflow-x:auto;padding:14px 18px 18px}
     .card-viz{
-      width:252px;flex-shrink:0;
+      width:278px;flex-shrink:0;
       border-left:1px solid var(--border);
       position:relative;overflow:hidden;
       display:flex;flex-direction:column;
       align-items:center;justify-content:center;
-      padding:12px 10px 10px;
+      padding:6px 6px 6px;
       background:linear-gradient(160deg,rgba(14,20,10,0.55) 0%,rgba(18,28,14,0.35) 100%);
-    }
-    .card-viz-lbl{
-      font-size:9px;font-weight:700;color:var(--muted);
-      text-transform:uppercase;letter-spacing:1.2px;
-      align-self:flex-start;margin-bottom:4px;
     }
     .bv-svg-wrap{position:relative;width:100%}
     /* heartbeat pulse on the heart group */
@@ -666,7 +670,6 @@
 
       <!-- 3D Health Visual -->
       <div class="card-viz">
-        <div class="card-viz-lbl">Health Score</div>
         <div class="bv-svg-wrap">
           <svg viewBox="0 0 240 250" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%">
             <defs>
@@ -1201,12 +1204,8 @@ function renderActivities(){
   const el=document.getElementById('actList'),last=ACTS.slice(0,4);
   if(!last.length){el.innerHTML=`<div class="act-empty">Noch keine Aktivitäten</div>`;return}
   el.innerHTML=last.map(a=>{
-    const c=HABIT_COLORS[a.id];
-    const icoStyle=c
-      ?`background:linear-gradient(135deg,${c.a}22,${c.a}55);border:1px solid ${c.a}44`
-      :`background:linear-gradient(135deg,#3d6600,#7acc00)`;
     return`<div class="act-item">
-      <div class="act-ico" style="${icoStyle}">${a.emoji}</div>
+      <div class="act-ico">${a.emoji}</div>
       <div><div class="act-name">${a.name}</div><div class="act-time">${timeAgo(a.ts)}</div></div>
       <div class="act-chk">✓</div>
     </div>`}).join('')
@@ -1218,7 +1217,9 @@ function renderWater(){
   document.getElementById('wBar').style.width=Math.min(100,v*250/2000*100)+'%';
 }
 function renderBodyViz(){
-  const{pct}=overallPct();
+  const y=TODAY.getFullYear(),m=TODAY.getMonth(),d=TODAY.getDate();
+  const doneCnt=HABITS.filter(h=>done(h,y,m,d)).length;
+  const pct=Math.min(100,Math.round(doneCnt/9*100));
   const el=document.getElementById('bvScore');
   if(el)el.textContent=pct+'%';
 }
