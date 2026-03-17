@@ -727,6 +727,55 @@
 
       .main{padding:12px 14px;gap:12px}
     }
+
+    /* ── CLOUD SYNC ── */
+    .sync-dot{
+      width:7px;height:7px;border-radius:50%;
+      background:var(--muted);display:inline-block;
+      margin-left:auto;flex-shrink:0;
+      transition:background .4s;
+    }
+    .sync-info{
+      background:rgba(182,255,86,0.05);
+      border:1px solid rgba(182,255,86,0.14);
+      border-radius:10px;padding:13px 15px;
+      margin-bottom:18px;font-size:12px;
+      color:var(--text2);line-height:1.75;
+    }
+    .sync-info a{color:var(--g);text-decoration:none}
+    .sync-info a:hover{text-decoration:underline}
+    .sync-info strong{-webkit-text-fill-color:initial!important;background:none!important;color:var(--text)}
+    .sync-section{margin-bottom:14px}
+    .sync-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:5px}
+    .sync-inp{
+      width:100%;background:rgba(44,51,59,0.85);
+      border:1px solid var(--border2);border-radius:10px;
+      color:var(--text);font-family:inherit;font-size:13px;
+      padding:9px 13px;outline:none;
+      transition:border-color .15s,box-shadow .15s;
+    }
+    .sync-inp:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(182,255,86,.1)}
+    .sync-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+    .sync-action-btn{
+      flex:1;min-width:100px;padding:10px 12px;border-radius:10px;
+      font-size:12px;font-weight:700;border:none;cursor:pointer;
+      transition:all .2s ease;display:flex;align-items:center;
+      justify-content:center;gap:5px;font-family:inherit;
+    }
+    .sync-save{background:linear-gradient(135deg,#7acc00,#b6ff56);color:#000}
+    .sync-save:hover{box-shadow:0 4px 18px rgba(182,255,86,0.4);transform:translateY(-1px)}
+    .sync-push{background:rgba(182,255,86,0.1);border:1px solid rgba(182,255,86,0.25);color:var(--g)}
+    .sync-push:hover{background:rgba(182,255,86,0.18);box-shadow:0 0 14px rgba(182,255,86,0.2)}
+    .sync-pull{background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);color:var(--b)}
+    .sync-pull:hover{background:rgba(96,165,250,0.18);box-shadow:0 0 14px rgba(96,165,250,0.2)}
+    #syncModalStatus{font-size:12px;margin-top:13px;text-align:center;min-height:20px;font-weight:600;transition:color .3s;word-break:break-word}
+    .sync-bin-row{display:flex;gap:6px;align-items:center}
+    .sync-copy-btn{
+      flex-shrink:0;padding:8px 10px;border-radius:8px;font-size:11px;font-weight:700;
+      background:rgba(44,51,59,0.9);border:1px solid var(--border2);
+      color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;
+    }
+    .sync-copy-btn:hover{border-color:var(--g);color:var(--g)}
   </style>
 </head>
 <body>
@@ -771,7 +820,13 @@
     <div class="nav-item">✨ Skincare</div>
     <div class="nav-item">🧹 Aufräumen</div>
   </div>
-  <div class="nav-bottom"><div class="nav-item">⚙️ Einstellungen</div></div>
+  <div class="nav-bottom">
+    <div class="nav-item" onclick="openSyncModal()" style="justify-content:flex-start">
+      ☁️ Cloud-Sync
+      <span id="syncDot" class="sync-dot" title="Sync-Status"></span>
+    </div>
+    <div class="nav-item">⚙️ Einstellungen</div>
+  </div>
 </aside>
 
 <!-- MAIN -->
@@ -968,6 +1023,40 @@
       <button class="modal-close" onclick="closeReview()">✕</button>
     </div>
     <div id="reviewContent"></div>
+  </div>
+</div>
+
+<!-- SYNC MODAL -->
+<div class="modal-overlay" id="syncModal" style="display:none" onclick="if(event.target===this)closeSyncModal()">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-hdr">
+      <span class="modal-ttl">☁️ Cloud-Sync</span>
+      <button class="modal-close" onclick="closeSyncModal()">✕</button>
+    </div>
+    <div class="sync-info">
+      <strong>Einrichtung (einmalig):</strong><br>
+      1. Kostenlosen Account auf <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> erstellen<br>
+      2. Im Dashboard: <em>API Keys → Create Access Key</em> → Key kopieren<br>
+      3. Hier eintragen &amp; auf <strong>↑ Hochladen</strong> drücken — Bin wird automatisch erstellt<br>
+      4. Bin-ID auf dem anderen Gerät eintippen, dann <strong>↓ Herunterladen</strong>
+    </div>
+    <div class="sync-section">
+      <div class="sync-lbl">Master API Key</div>
+      <input class="sync-inp" id="syncKeyInp" type="password" placeholder="$2b$10$…" autocomplete="off"/>
+    </div>
+    <div class="sync-section">
+      <div class="sync-lbl">Bin ID <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(wird beim ersten Upload erstellt)</span></div>
+      <div class="sync-bin-row">
+        <input class="sync-inp" id="syncBinInp" placeholder="64abc123…" autocomplete="off" style="flex:1"/>
+        <button class="sync-copy-btn" onclick="copySyncBin()" title="Bin-ID kopieren">📋 Kopieren</button>
+      </div>
+    </div>
+    <div class="sync-actions">
+      <button class="sync-action-btn sync-save" onclick="saveSyncConfig()">💾 Speichern</button>
+      <button class="sync-action-btn sync-push" onclick="syncPush()">↑ Hochladen</button>
+      <button class="sync-action-btn sync-pull" onclick="syncPull()">↓ Herunterladen</button>
+    </div>
+    <div id="syncModalStatus"></div>
   </div>
 </div>
 
@@ -1413,7 +1502,121 @@ document.querySelectorAll('.nav-item').forEach(el=>{
   });
 });
 
-loadAll();render();initNotifications();
+/* ─────────────────────────────────────────────
+   CLOUD SYNC  –  JSONBin.io
+   ───────────────────────────────────────────── */
+function getSyncKey(){return localStorage.getItem('hf5_sync_key')||''}
+function getSyncBin(){return localStorage.getItem('hf5_sync_bin')||''}
+
+function openSyncModal(){
+  document.getElementById('syncModal').style.display='flex';
+  document.getElementById('syncKeyInp').value=getSyncKey();
+  document.getElementById('syncBinInp').value=getSyncBin();
+  setSyncModalStatus('','');
+}
+function closeSyncModal(){document.getElementById('syncModal').style.display='none'}
+
+function saveSyncConfig(){
+  const k=document.getElementById('syncKeyInp').value.trim();
+  const b=document.getElementById('syncBinInp').value.trim();
+  if(!k){setSyncModalStatus('⚠️ API Key fehlt!','#f87171');return}
+  localStorage.setItem('hf5_sync_key',k);
+  if(b)localStorage.setItem('hf5_sync_bin',b);
+  setSyncModalStatus('✓ Gespeichert','#b6ff56');
+  updateSyncDot('#b6ff56');
+}
+
+function copySyncBin(){
+  const v=document.getElementById('syncBinInp').value.trim();
+  if(!v){setSyncModalStatus('Noch keine Bin-ID vorhanden — erst hochladen','#fbbf24');return}
+  navigator.clipboard.writeText(v).then(()=>setSyncModalStatus('📋 Bin-ID kopiert!','#b6ff56')).catch(()=>setSyncModalStatus('Kopieren fehlgeschlagen — manuell kopieren','#f87171'));
+}
+
+async function syncPush(){
+  const key=getSyncKey();
+  if(!key){openSyncModal();setSyncModalStatus('⚠️ Bitte erst API Key eintragen','#fbbf24');return}
+  setSyncModalStatus('⏳ Speichere…','#fbbf24');
+  const data={db:DB,goals:GOALS,todos:TODOS,acts:ACTS,notes:NOTES,ts:Date.now()};
+  const binId=getSyncBin();
+  try{
+    let res,json;
+    if(!binId){
+      // First time: create a new bin
+      res=await fetch('https://api.jsonbin.io/v3/b',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'HabitFlow','X-Bin-Private':'true'},
+        body:JSON.stringify(data)
+      });
+      json=await res.json();
+      if(json.metadata&&json.metadata.id){
+        localStorage.setItem('hf5_sync_bin',json.metadata.id);
+        document.getElementById('syncBinInp').value=json.metadata.id;
+        setSyncModalStatus('✓ Bin erstellt & hochgeladen — Bin-ID kopieren und auf anderem Gerät eintippen!','#b6ff56');
+        updateSyncDot('#b6ff56');
+      }else{
+        throw new Error(json.message||'Bin-Erstellung fehlgeschlagen');
+      }
+    }else{
+      // Update existing bin
+      res=await fetch(`https://api.jsonbin.io/v3/b/${binId}`,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':key},
+        body:JSON.stringify(data)
+      });
+      json=await res.json();
+      if(json.record||json.metadata){
+        setSyncModalStatus('✓ Erfolgreich hochgeladen','#b6ff56');
+        updateSyncDot('#b6ff56');
+      }else{
+        throw new Error(json.message||'Upload fehlgeschlagen');
+      }
+    }
+  }catch(e){
+    setSyncModalStatus('✗ '+e.message,'#f87171');
+    updateSyncDot('#f87171');
+  }
+}
+
+async function syncPull(){
+  const key=getSyncKey();
+  const binId=getSyncBin();
+  if(!key||!binId){openSyncModal();setSyncModalStatus('⚠️ Bitte API Key und Bin-ID eintragen','#fbbf24');return}
+  setSyncModalStatus('⏳ Lade herunter…','#fbbf24');
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{
+      headers:{'X-Master-Key':key,'X-Bin-Meta':'false'}
+    });
+    const json=await res.json();
+    // jsonbin returns {record:{...}} for latest with X-Bin-Meta:false it returns the object directly
+    const d=json.record||json;
+    if(!d||(!d.db&&!d.habits)){throw new Error('Keine gültigen HabitFlow-Daten gefunden')}
+    if(d.db){DB=d.db;localStorage.setItem('hf5_db',JSON.stringify(DB))}
+    if(d.goals){GOALS=d.goals;localStorage.setItem('hf5_goals',JSON.stringify(GOALS))}
+    if(d.todos){TODOS=d.todos;localStorage.setItem('hf5_todos',JSON.stringify(TODOS))}
+    if(d.acts){ACTS=d.acts;localStorage.setItem('hf5_acts',JSON.stringify(ACTS))}
+    if(d.notes){NOTES=d.notes;localStorage.setItem('hf5_notes',JSON.stringify(NOTES))}
+    setSyncModalStatus('✓ Daten synchronisiert!','#b6ff56');
+    updateSyncDot('#b6ff56');
+    render();
+  }catch(e){
+    setSyncModalStatus('✗ '+e.message,'#f87171');
+    updateSyncDot('#f87171');
+  }
+}
+
+function setSyncModalStatus(msg,color){
+  const el=document.getElementById('syncModalStatus');
+  if(el){el.textContent=msg;el.style.color=color||'var(--text2)'}
+}
+function updateSyncDot(color){
+  const dot=document.getElementById('syncDot');
+  if(dot)dot.style.background=color;
+}
+function initSync(){
+  if(getSyncKey()&&getSyncBin())updateSyncDot('#b6ff56');
+}
+
+loadAll();render();initNotifications();initSync();
 </script>
 </body>
 </html>
