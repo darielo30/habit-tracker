@@ -707,12 +707,17 @@
       /* Bigger touch targets for check cells */
       .cc,.wc{width:26px;height:26px;border-radius:6px;font-size:12px}
 
-      /* Todo: 2 visible columns, rest accessible via scroll */
+      /* Todo: fallback scroll wenn kein Filter aktiv */
       .todo-grid{
-        grid-template-columns:repeat(2,1fr);
-        overflow-x:auto;padding-bottom:10px;
+        grid-template-columns:repeat(5,minmax(150px,1fr));
+        overflow-x:auto;padding-bottom:12px;
+        -webkit-overflow-scrolling:touch;
       }
-      .tw:nth-child(n+3){display:none}
+      /* Einzelne Woche ausgewählt → volle Breite */
+      .todo-grid.single-week{
+        grid-template-columns:1fr!important;
+        overflow-x:visible;
+      }
 
       /* Right panel: back to single column on phone */
       .rpanel{flex-direction:column;padding:14px;gap:14px}
@@ -727,6 +732,19 @@
 
       .main{padding:12px 14px;gap:12px}
     }
+
+    /* ── WEEK SELECTOR DROPDOWN ── */
+    .week-sel{
+      display:none; /* desktop: hidden */
+      background:rgba(44,51,59,0.85);
+      border:1px solid var(--border2);
+      border-radius:8px;color:var(--text);
+      font-family:inherit;font-size:11px;font-weight:600;
+      padding:5px 8px;outline:none;cursor:pointer;
+      transition:border-color .15s;margin-left:auto;
+    }
+    .week-sel:focus{border-color:var(--g)}
+    @media(max-width:1099px){.week-sel{display:block}}
 
     /* ── CLOUD SYNC ── */
     .sync-dot{
@@ -846,7 +864,11 @@
   <div class="summary-bar" id="summaryBar"></div>
   <div class="stats-scroll"><div class="stats-row" id="statsRow"></div></div>
   <div class="card">
-    <div class="card-hdr"><span class="card-ttl"><span class="ttl-ico">📋</span> Monatsübersicht</span><span class="badge">📝 Tag anklicken für Notiz</span></div>
+    <div class="card-hdr">
+      <span class="card-ttl"><span class="ttl-ico">📋</span> Monatsübersicht</span>
+      <select class="week-sel" id="gridWeekSel" onchange="renderGrid()"></select>
+      <span class="badge">📝 Tag anklicken für Notiz</span>
+    </div>
     <div class="card-body-split">
       <div class="grid-scroll"><div id="gridWrap"></div></div>
 
@@ -951,8 +973,34 @@
       </div>
     </div>
   </div>
+  <!-- 💧 Wasser heute — direkt unter Monatsübersicht -->
   <div class="card">
-    <div class="card-hdr"><span class="card-ttl"><span class="ttl-ico">✅</span> Wöchentliche To-Dos</span><span class="badge">10 pro Woche</span></div>
+    <div class="card-hdr">
+      <span class="card-ttl"><span class="ttl-ico">💧</span> Wasser heute</span>
+      <span class="badge" id="wBadge">0 ml / 2.000 ml</span>
+    </div>
+    <div style="padding:14px 18px 18px">
+      <div class="wgrid" id="wGlasses"></div>
+      <div class="winfo">
+        <div class="wml" id="wMl">0 ml</div>
+        <div class="wgoal">Ziel: 2.000 ml</div>
+      </div>
+      <div class="pbar"><div class="pfill" id="wBar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-ttl"><span class="ttl-ico">✅</span> Wöchentliche To-Dos</span>
+      <select class="week-sel" id="todoWeekSel" onchange="renderTodos()">
+        <option value="1">Woche 1</option>
+        <option value="2">Woche 2</option>
+        <option value="3">Woche 3</option>
+        <option value="4">Woche 4</option>
+        <option value="5">Extra</option>
+      </select>
+      <span class="badge">10 pro Woche</span>
+    </div>
     <div class="todo-grid" id="todoGrid"></div>
   </div>
   <div class="card">
@@ -987,17 +1035,6 @@
         <button class="notif-btn nb-on" id="notifBtn" onclick="toggleNotif()">Aktivieren</button>
       </div>
       <div class="notif-status ns-off" id="notifStatus">● Nicht aktiv</div>
-    </div>
-  </div>
-  <div>
-    <div class="rp-ttl">💧 Wasser heute</div>
-    <div class="wbox">
-      <div class="wgrid" id="wGlasses"></div>
-      <div class="winfo">
-        <div class="wml" id="wMl">0 ml</div>
-        <div class="wgoal">Ziel: 2.000 ml</div>
-      </div>
-      <div class="pbar"><div class="pfill" id="wBar" style="width:0%"></div></div>
     </div>
   </div>
 </aside>
@@ -1233,7 +1270,7 @@ function clickGlass(idx){
   hset(y,m,d,'water',nv);if(nv===8)logAct('water');
   checkConfetti(y,m,d);render();
 }
-function changeMonth(dir){M+=dir;if(M>11){M=0;Y++}if(M<0){M=11;Y--}render()}
+function changeMonth(dir){M+=dir;if(M>11){M=0;Y++}if(M<0){M=11;Y--}initWeekSelectors();render()}
 function toggleTodo(wk,i){const t=getTodo(wk,i);setTodo(wk,i,{...t,done:!t.done});renderTodos()}
 function saveTodoText(wk,i,v){setTodo(wk,i,{...getTodo(wk,i),text:v})}
 function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px'}
@@ -1349,10 +1386,15 @@ function renderStats(){
   }).join('')
 }
 function renderGrid(){
-  const total=dim(Y,M),weeks=[];
-  for(let s=1;s<=total;s+=7)weeks.push({s,e:Math.min(s+6,total)});
+  const total=dim(Y,M),allWeeks=[];
+  for(let s=1;s<=total;s+=7)allWeeks.push({s,e:Math.min(s+6,total)});
+  // Week filter: read dropdown (0 = all)
+  const selEl=document.getElementById('gridWeekSel');
+  const selWk=selEl?parseInt(selEl.value)||0:0;
+  // Preserve week number for header label even when filtering
+  const weeks=allWeeks.map((w,i)=>({...w,wkNum:i+1})).filter((_,i)=>!selWk||i===selWk-1);
   let h=`<table class="htable"><thead><tr><th class="hn">Gewohnheit</th>`;
-  weeks.forEach((w,i)=>{if(i>0)h+=`<th class="hsep"></th>`;h+=`<th colspan="${w.e-w.s+1}" class="hw">Woche ${i+1}</th>`});
+  weeks.forEach((w,i)=>{if(i>0)h+=`<th class="hsep"></th>`;h+=`<th colspan="${w.e-w.s+1}" class="hw">Woche ${w.wkNum}</th>`});
   h+=`<th class="he">Total</th><th class="he">Streak</th><th class="hg">Ziel</th></tr>`;
   h+=`<tr><th class="hn"></th>`;
   weeks.forEach((w,i)=>{
@@ -1386,9 +1428,14 @@ function renderGrid(){
   document.getElementById('gridWrap').innerHTML=h+`</tbody></table>`;
 }
 function renderTodos(){
+  const selEl=document.getElementById('todoWeekSel');
+  const selWk=selEl?parseInt(selEl.value)||0:0;
+  const grid=document.getElementById('todoGrid');
+  grid.classList.toggle('single-week',selWk>0);
   let h='';
   for(let wk=1;wk<=5;wk++){
-    h+=`<div class="tw"><div class="tw-title">${wk===5?'Extra':'Woche '+wk}</div>`;
+    const visible=!selWk||selWk===wk;
+    h+=`<div class="tw"${visible?'':' style="display:none"'}><div class="tw-title">${wk===5?'Extra':'Woche '+wk}</div>`;
     for(let i=0;i<10;i++){
       const t=getTodo(wk,i);
       h+=`<div class="ti"><div class="tck ${t.done?'tdone':''}" onclick="toggleTodo(${wk},${i})">${t.done?'✓':''}</div><textarea class="tinp ${t.done?'tstriked':''}" rows="1" placeholder="Aufgabe ${i+1}…" oninput="saveTodoText(${wk},${i},this.value);autoResize(this)">${esc(t.text)}</textarea></div>`
@@ -1475,6 +1522,27 @@ function renderWater(){
   document.getElementById('wGlasses').innerHTML=Array.from({length:8},(_,i)=>`<div class="wg ${i<v?'wgf':''}" onclick="clickGlass(${i})" title="Glas ${i+1}">🥛</div>`).join('');
   document.getElementById('wMl').textContent=v*250+' ml';
   document.getElementById('wBar').style.width=Math.min(100,v*250/2000*100)+'%';
+  const badge=document.getElementById('wBadge');
+  if(badge)badge.textContent=(v*250)+' ml / 2.000 ml';
+}
+/* ── WEEK SELECTORS ── */
+function initWeekSelectors(){
+  const curWk=isCur()?Math.min(5,Math.ceil(TODAY.getDate()/7)):1;
+  const total=dim(Y,M),numWeeks=Math.ceil(total/7);
+  // Grid selector: dynamic options based on month
+  const gridSel=document.getElementById('gridWeekSel');
+  if(gridSel){
+    let opts='';
+    for(let i=0;i<numWeeks;i++){
+      const s=i*7+1,e=Math.min(s+6,total);
+      opts+=`<option value="${i+1}">${i===4?'Extra':'Woche '+(i+1)} (${s}.–${e}.)</option>`;
+    }
+    gridSel.innerHTML=opts;
+    gridSel.value=String(Math.min(curWk,numWeeks));
+  }
+  // Todo selector: always 5 options, just set value
+  const todoSel=document.getElementById('todoWeekSel');
+  if(todoSel)todoSel.value=String(curWk);
 }
 function renderBodyViz(){
   const y=TODAY.getFullYear(),m=TODAY.getMonth(),d=TODAY.getDate();
@@ -1616,7 +1684,7 @@ function initSync(){
   if(getSyncKey()&&getSyncBin())updateSyncDot('#b6ff56');
 }
 
-loadAll();render();initNotifications();initSync();
+loadAll();initWeekSelectors();render();initNotifications();initSync();
 </script>
 </body>
 </html>
