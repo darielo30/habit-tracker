@@ -622,6 +622,111 @@
     .stat-card:nth-child(9){animation:fadeSlideUp .4s ease both .48s}
     .stat-card:nth-child(10){animation:fadeSlideUp .4s ease both .53s}
     .stat-card:nth-child(11){animation:fadeSlideUp .4s ease both .58s}
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE — Tablet + Mobile
+       ══════════════════════════════════════════ */
+
+    /* Elements that only appear on mobile */
+    .mob-menu-btn,.sidebar-close{display:none}
+    .sidebar-overlay{
+      display:none;position:fixed;inset:0;
+      background:rgba(0,0,0,.65);backdrop-filter:blur(4px);
+      z-index:199;
+    }
+    .sidebar-overlay.mob-vis{display:block}
+
+    /* ── TABLET (≤ 1099px) ── */
+    @media(max-width:1099px){
+      body{
+        grid-template-columns:1fr;
+        height:auto;min-height:100vh;
+        overflow-y:auto;overflow-x:hidden;
+      }
+      /* Sidebar → fixed side-drawer */
+      .sidebar{
+        position:fixed;top:0;left:0;bottom:0;
+        width:260px;z-index:200;
+        transform:translateX(-110%);
+        transition:transform .28s cubic-bezier(.4,0,.2,1);
+        overflow-y:auto;
+      }
+      .sidebar.mob-open{transform:translateX(0)}
+      /* Close button inside sidebar */
+      .sidebar-close{
+        display:flex;align-items:center;justify-content:center;
+        position:absolute;top:18px;right:14px;
+        width:28px;height:28px;border-radius:7px;
+        background:var(--card2);border:1px solid var(--border);
+        color:var(--text2);font-size:13px;cursor:pointer;
+        transition:all .15s;
+      }
+      .sidebar-close:hover{border-color:var(--g);color:var(--g)}
+      /* Hamburger button in header */
+      .mob-menu-btn{
+        display:flex;align-items:center;justify-content:center;
+        width:36px;height:36px;flex-shrink:0;
+        background:var(--card);border:1px solid var(--border2);
+        border-radius:9px;color:var(--text2);font-size:16px;
+        cursor:pointer;transition:all .15s;
+      }
+      .mob-menu-btn:hover{border-color:var(--g);color:var(--g)}
+      /* Right panel: wrap into row tiles below main */
+      .rpanel{
+        border-left:none;border-top:1px solid var(--border);
+        flex-direction:row;flex-wrap:wrap;
+        overflow-y:visible;padding:18px;gap:16px;
+      }
+      .rpanel>div{flex:1 1 220px;min-width:0}
+      /* Main */
+      .main{padding:16px 18px;gap:16px}
+      /* Heart viz takes too much space on tablet → hide */
+      .card-viz{display:none}
+    }
+
+    /* ── MOBILE (≤ 680px) ── */
+    @media(max-width:680px){
+      .header{flex-wrap:wrap;gap:8px}
+      .header h1{font-size:20px}
+      .header p{font-size:11px;margin-top:2px}
+      .header-actions{width:100%;justify-content:space-between}
+      /* Keep review icon, hide text */
+      .review-txt{display:none}
+      .month-nav{padding:6px 10px}
+      #monthLabel{min-width:75px;font-size:12px}
+
+      /* Summary bar: 2 × 2 grid */
+      .summary-bar{flex-wrap:wrap}
+      .sitem{flex:1 1 45%;min-width:0;padding:12px 14px}
+      .sitem:nth-child(2){border-right:none}
+      .sitem:nth-child(n+3){border-top:1px solid var(--border)}
+
+      /* Stat cards: tighter */
+      .stat-card{min-width:108px;padding:11px 12px}
+
+      /* Bigger touch targets for check cells */
+      .cc,.wc{width:26px;height:26px;border-radius:6px;font-size:12px}
+
+      /* Todo: 2 visible columns, rest accessible via scroll */
+      .todo-grid{
+        grid-template-columns:repeat(2,1fr);
+        overflow-x:auto;padding-bottom:10px;
+      }
+      .tw:nth-child(n+3){display:none}
+
+      /* Right panel: back to single column on phone */
+      .rpanel{flex-direction:column;padding:14px;gap:14px}
+      .rpanel>div{flex:none}
+      .donut-outer{width:148px}
+
+      /* Heatmap: smaller cells */
+      .hm-cell{width:10px;height:10px}
+
+      /* Card header badge: wrap allowed */
+      .card-hdr{flex-wrap:wrap;gap:6px}
+
+      .main{padding:12px 14px;gap:12px}
+    }
   </style>
 </head>
 <body>
@@ -630,8 +735,12 @@
 <div id="bg-fx" aria-hidden="true"></div>
 <div id="bg-noise" aria-hidden="true"></div>
 
+<!-- Mobile sidebar overlay -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <!-- SIDEBAR -->
 <aside class="sidebar">
+  <button class="sidebar-close" onclick="toggleSidebar()" aria-label="Sidebar schließen">✕</button>
   <div class="brand">
     <div class="brand-icon">
       <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
@@ -670,7 +779,8 @@
   <div class="header">
     <div><h1>Habit Tracker</h1><p id="headerSub">Dariel</p></div>
     <div class="header-actions">
-      <button class="review-btn" onclick="openReview()">📊 Monatsrückblick</button>
+      <button class="mob-menu-btn" onclick="toggleSidebar()" aria-label="Menü öffnen">☰</button>
+      <button class="review-btn" onclick="openReview()">📊 <span class="review-txt">Monatsrückblick</span></button>
       <div class="month-nav">
         <button class="month-btn" onclick="changeMonth(-1)">‹</button>
         <span id="monthLabel"></span>
@@ -1290,6 +1400,18 @@ function render(){
   renderSummary();renderStats();renderGrid();renderTodos();renderHeatmap();
   renderDonut();renderActivities();renderWater();renderBodyViz();
 }
+
+/* MOBILE SIDEBAR */
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('mob-open');
+  document.querySelector('.sidebar-overlay').classList.toggle('mob-vis');
+}
+// Close sidebar when navigating (any nav-item tap)
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click',()=>{
+    if(window.innerWidth<=1099)toggleSidebar();
+  });
+});
 
 loadAll();render();initNotifications();
 </script>
