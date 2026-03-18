@@ -295,7 +295,22 @@
       margin-bottom:10px;padding-bottom:6px;
       border-bottom:2px solid rgba(182,255,86,.22);
     }
-    .ti{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px}
+    .ti{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;position:relative}
+    .ti-sort{
+      display:flex;flex-direction:column;gap:2px;flex-shrink:0;
+      opacity:0;transition:opacity .15s;padding-top:2px;
+    }
+    .ti:hover .ti-sort{opacity:1}
+    .tsort-btn{
+      width:16px;height:13px;border-radius:3px;border:none;
+      background:rgba(255,255,255,0.06);color:var(--muted);
+      cursor:pointer;font-size:8px;padding:0;line-height:1;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .12s;
+    }
+    .tsort-btn:hover:not(:disabled){background:rgba(182,255,86,0.15);color:var(--g)}
+    .tsort-btn:disabled{opacity:0.18;cursor:default}
+    @media(max-width:1099px){.ti-sort{opacity:1}}
     .tck{
       width:14px;height:14px;border-radius:3px;
       border:1.5px solid rgba(255,255,255,0.1);
@@ -1299,6 +1314,13 @@ function clickGlass(idx){
 }
 function changeMonth(dir){M+=dir;if(M>11){M=0;Y++}if(M<0){M=11;Y--}initWeekSelectors();render()}
 function toggleTodo(wk,i){const t=getTodo(wk,i);setTodo(wk,i,{...t,done:!t.done});renderTodos()}
+function moveTodo(wk,i,dir){
+  const ni=i+dir;
+  if(ni<0||ni>=10)return;
+  const a=getTodo(wk,i),b=getTodo(wk,ni);
+  setTodo(wk,i,b);setTodo(wk,ni,a);
+  renderTodos();
+}
 function saveTodoText(wk,i,v){setTodo(wk,i,{...getTodo(wk,i),text:v})}
 function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px'}
 function editGoal(id,el){const cur=getGoal(id);el.outerHTML=`<input class="ginp" type="number" min="1" max="31" value="${cur}" onblur="finishGoal('${id}',this)" onkeydown="if(event.key==='Enter')this.blur()" autofocus>`}
@@ -1468,7 +1490,14 @@ function renderTodos(){
     h+=`<div class="tw"${visible?'':' style="display:none"'}><div class="tw-title">${wk===5?'Extra':'Woche '+wk}</div>`;
     for(let i=0;i<10;i++){
       const t=getTodo(wk,i);
-      h+=`<div class="ti"><div class="tck ${t.done?'tdone':''}" onclick="toggleTodo(${wk},${i})">${t.done?'✓':''}</div><textarea class="tinp ${t.done?'tstriked':''}" rows="1" placeholder="Aufgabe ${i+1}…" oninput="saveTodoText(${wk},${i},this.value);autoResize(this)">${esc(t.text)}</textarea></div>`
+      h+=`<div class="ti">
+        <div class="tck ${t.done?'tdone':''}" onclick="toggleTodo(${wk},${i})">${t.done?'✓':''}</div>
+        <textarea class="tinp ${t.done?'tstriked':''}" rows="1" placeholder="Aufgabe ${i+1}…" oninput="saveTodoText(${wk},${i},this.value);autoResize(this)">${esc(t.text)}</textarea>
+        <div class="ti-sort">
+          <button class="tsort-btn" onclick="moveTodo(${wk},${i},-1)" ${i===0?'disabled':''} title="Nach oben">▲</button>
+          <button class="tsort-btn" onclick="moveTodo(${wk},${i},1)"  ${i===9?'disabled':''} title="Nach unten">▼</button>
+        </div>
+      </div>`
     }
     h+=`</div>`;
   }
