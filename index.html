@@ -1397,9 +1397,9 @@ function renderStats(){
 function renderGrid(){
   const total=dim(Y,M),allWeeks=[];
   for(let s=1;s<=total;s+=7)allWeeks.push({s,e:Math.min(s+6,total)});
-  // Week filter: read dropdown (0 = all)
+  // Week filter: only apply on mobile — desktop always shows all weeks
   const selEl=document.getElementById('gridWeekSel');
-  const selWk=selEl?parseInt(selEl.value)||0:0;
+  const selWk=(window.innerWidth<=1099&&selEl)?parseInt(selEl.value)||0:0;
   // Preserve week number for header label even when filtering
   const weeks=allWeeks.map((w,i)=>({...w,wkNum:i+1})).filter((_,i)=>!selWk||i===selWk-1);
   // Toggle compact class on grid-scroll so CSS can drop the min-width
@@ -1441,7 +1441,7 @@ function renderGrid(){
 }
 function renderTodos(){
   const selEl=document.getElementById('todoWeekSel');
-  const selWk=selEl?parseInt(selEl.value)||0:0;
+  const selWk=(window.innerWidth<=1099&&selEl)?parseInt(selEl.value)||0:0;
   const grid=document.getElementById('todoGrid');
   grid.classList.toggle('single-week',selWk>0);
   let h='';
