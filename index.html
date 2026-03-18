@@ -682,6 +682,15 @@
       .main{padding:16px 18px;gap:16px}
       /* Heart viz takes too much space on tablet → hide */
       .card-viz{display:none}
+
+      /* Wochen-Filter aktiv: min-width aufheben damit die Tabelle kompakt bleibt */
+      .grid-scroll.wk-filtered .htable{min-width:unset;width:100%}
+      .grid-scroll.wk-filtered .htable th.hn,
+      .grid-scroll.wk-filtered .htable td.hn{width:100px;min-width:80px;font-size:11px}
+      .grid-scroll.wk-filtered .htable th.he{width:36px}
+      .grid-scroll.wk-filtered .htable th.hg{width:46px}
+      .grid-scroll.wk-filtered .cc,
+      .grid-scroll.wk-filtered .wc{width:28px;height:28px}
     }
 
     /* ── MOBILE (≤ 680px) ── */
@@ -1393,6 +1402,9 @@ function renderGrid(){
   const selWk=selEl?parseInt(selEl.value)||0:0;
   // Preserve week number for header label even when filtering
   const weeks=allWeeks.map((w,i)=>({...w,wkNum:i+1})).filter((_,i)=>!selWk||i===selWk-1);
+  // Toggle compact class on grid-scroll so CSS can drop the min-width
+  const gs=document.querySelector('.grid-scroll');
+  if(gs)gs.classList.toggle('wk-filtered',selWk>0);
   let h=`<table class="htable"><thead><tr><th class="hn">Gewohnheit</th>`;
   weeks.forEach((w,i)=>{if(i>0)h+=`<th class="hsep"></th>`;h+=`<th colspan="${w.e-w.s+1}" class="hw">Woche ${w.wkNum}</th>`});
   h+=`<th class="he">Total</th><th class="he">Streak</th><th class="hg">Ziel</th></tr>`;
