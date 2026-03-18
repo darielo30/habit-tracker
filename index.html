@@ -295,22 +295,21 @@
       margin-bottom:10px;padding-bottom:6px;
       border-bottom:2px solid rgba(182,255,86,.22);
     }
-    .ti{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;position:relative}
-    .ti-sort{
-      display:flex;flex-direction:column;gap:2px;flex-shrink:0;
-      opacity:0;transition:opacity .15s;padding-top:2px;
+    .ti{display:flex;align-items:flex-start;gap:6px;margin-bottom:2px;
+      border-radius:7px;padding:2px 4px 2px 0;
+      transition:background .12s,opacity .15s;user-select:none}
+    .ti-handle{
+      flex-shrink:0;width:14px;padding-top:3px;
+      color:var(--muted);cursor:grab;opacity:0;
+      transition:opacity .15s;font-size:11px;line-height:1.2;
+      letter-spacing:-1px;user-select:none;
     }
-    .ti:hover .ti-sort{opacity:1}
-    .tsort-btn{
-      width:16px;height:13px;border-radius:3px;border:none;
-      background:rgba(255,255,255,0.06);color:var(--muted);
-      cursor:pointer;font-size:8px;padding:0;line-height:1;
-      display:flex;align-items:center;justify-content:center;
-      transition:all .12s;
-    }
-    .tsort-btn:hover:not(:disabled){background:rgba(182,255,86,0.15);color:var(--g)}
-    .tsort-btn:disabled{opacity:0.18;cursor:default}
-    @media(max-width:1099px){.ti-sort{opacity:1}}
+    .ti:hover .ti-handle{opacity:0.55}
+    .ti-handle:active{cursor:grabbing}
+    .ti.ti-dragging{opacity:0.3;background:rgba(182,255,86,0.04)}
+    .ti.drag-top{box-shadow:0 -2px 0 var(--g),0 -2px 8px rgba(182,255,86,0.25)}
+    .ti.drag-bot{box-shadow:0 2px 0 var(--g),0 2px 8px rgba(182,255,86,0.25)}
+    @media(max-width:1099px){.ti-handle{opacity:0.38}}
     .tck{
       width:14px;height:14px;border-radius:3px;
       border:1.5px solid rgba(255,255,255,0.1);
@@ -1314,13 +1313,6 @@ function clickGlass(idx){
 }
 function changeMonth(dir){M+=dir;if(M>11){M=0;Y++}if(M<0){M=11;Y--}initWeekSelectors();render()}
 function toggleTodo(wk,i){const t=getTodo(wk,i);setTodo(wk,i,{...t,done:!t.done});renderTodos()}
-function moveTodo(wk,i,dir){
-  const ni=i+dir;
-  if(ni<0||ni>=10)return;
-  const a=getTodo(wk,i),b=getTodo(wk,ni);
-  setTodo(wk,i,b);setTodo(wk,ni,a);
-  renderTodos();
-}
 function saveTodoText(wk,i,v){setTodo(wk,i,{...getTodo(wk,i),text:v})}
 function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px'}
 function editGoal(id,el){const cur=getGoal(id);el.outerHTML=`<input class="ginp" type="number" min="1" max="31" value="${cur}" onblur="finishGoal('${id}',this)" onkeydown="if(event.key==='Enter')this.blur()" autofocus>`}
@@ -1490,19 +1482,59 @@ function renderTodos(){
     h+=`<div class="tw"${visible?'':' style="display:none"'}><div class="tw-title">${wk===5?'Extra':'Woche '+wk}</div>`;
     for(let i=0;i<10;i++){
       const t=getTodo(wk,i);
-      h+=`<div class="ti">
+      h+=`<div class="ti" draggable="true" data-wk="${wk}" data-i="${i}">
+        <span class="ti-handle" title="Ziehen zum Sortieren">⠿</span>
         <div class="tck ${t.done?'tdone':''}" onclick="toggleTodo(${wk},${i})">${t.done?'✓':''}</div>
         <textarea class="tinp ${t.done?'tstriked':''}" rows="1" placeholder="Aufgabe ${i+1}…" oninput="saveTodoText(${wk},${i},this.value);autoResize(this)">${esc(t.text)}</textarea>
-        <div class="ti-sort">
-          <button class="tsort-btn" onclick="moveTodo(${wk},${i},-1)" ${i===0?'disabled':''} title="Nach oben">▲</button>
-          <button class="tsort-btn" onclick="moveTodo(${wk},${i},1)"  ${i===9?'disabled':''} title="Nach unten">▼</button>
-        </div>
       </div>`
     }
     h+=`</div>`;
   }
   document.getElementById('todoGrid').innerHTML=h;
   document.querySelectorAll('.tinp').forEach(el=>autoResize(el));
+  attachTodoDrag();
+}
+
+let _dragSrc=null;
+function attachTodoDrag(){
+  const items=[...document.querySelectorAll('.ti[data-wk]')];
+  items.forEach(el=>{
+    el.addEventListener('dragstart',e=>{
+      _dragSrc={wk:+el.dataset.wk,i:+el.dataset.i};
+      el.classList.add('ti-dragging');
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain','');
+    });
+    el.addEventListener('dragend',()=>{
+      el.classList.remove('ti-dragging');
+      items.forEach(x=>x.classList.remove('drag-top','drag-bot'));
+    });
+    el.addEventListener('dragover',e=>{
+      e.preventDefault();
+      if(!_dragSrc||+el.dataset.wk!==_dragSrc.wk)return;
+      items.forEach(x=>x.classList.remove('drag-top','drag-bot'));
+      const mid=el.getBoundingClientRect().top+el.offsetHeight/2;
+      el.classList.add(e.clientY<mid?'drag-top':'drag-bot');
+    });
+    el.addEventListener('dragleave',()=>el.classList.remove('drag-top','drag-bot'));
+    el.addEventListener('drop',e=>{
+      e.preventDefault();
+      if(!_dragSrc)return;
+      const dstWk=+el.dataset.wk,dstI=+el.dataset.i;
+      if(_dragSrc.wk!==dstWk||_dragSrc.i===dstI){_dragSrc=null;return;}
+      const mid=el.getBoundingClientRect().top+el.offsetHeight/2;
+      const insertAfter=e.clientY>=mid;
+      reorderTodos(_dragSrc.wk,_dragSrc.i,dstI+(insertAfter?1:0));
+      _dragSrc=null;
+    });
+  });
+}
+function reorderTodos(wk,fromI,toI){
+  const arr=Array.from({length:10},(_,i)=>getTodo(wk,i));
+  const [item]=arr.splice(fromI,1);
+  arr.splice(toI>fromI?toI-1:toI,0,item);
+  arr.forEach((t,i)=>setTodo(wk,i,t));
+  renderTodos();
 }
 function renderHeatmap(){
   const start=new Date(Y,0,1),startDow=start.getDay(),cells=[];
