@@ -742,6 +742,13 @@
       .main{padding:12px 14px;gap:12px}
     }
 
+    /* ── WASSER: Desktop = rpanel, Mobile = main ── */
+    .water-mob-card{display:none}
+    @media(max-width:1099px){
+      .water-mob-card{display:block}
+      .rpanel-water-wrap{display:none}
+    }
+
     /* ── WEEK SELECTOR DROPDOWN ── */
     .week-sel{
       display:none; /* desktop: hidden */
@@ -982,19 +989,19 @@
       </div>
     </div>
   </div>
-  <!-- 💧 Wasser heute — direkt unter Monatsübersicht -->
-  <div class="card">
+  <!-- 💧 Wasser heute — Mobile only (Desktop: rechtes Panel) -->
+  <div class="card water-mob-card">
     <div class="card-hdr">
       <span class="card-ttl"><span class="ttl-ico">💧</span> Wasser heute</span>
-      <span class="badge" id="wBadge">0 ml / 2.000 ml</span>
+      <span class="badge" id="wBadgeM">0 ml / 2.000 ml</span>
     </div>
     <div style="padding:14px 18px 18px">
-      <div class="wgrid" id="wGlasses"></div>
+      <div class="wgrid" id="wGlassesM"></div>
       <div class="winfo">
-        <div class="wml" id="wMl">0 ml</div>
+        <div class="wml" id="wMlM">0 ml</div>
         <div class="wgoal">Ziel: 2.000 ml</div>
       </div>
-      <div class="pbar"><div class="pfill" id="wBar" style="width:0%"></div></div>
+      <div class="pbar"><div class="pfill" id="wBarM" style="width:0%"></div></div>
     </div>
   </div>
 
@@ -1034,6 +1041,17 @@
   <div>
     <div class="rp-ttl">Activities</div>
     <div id="actList"><div class="act-empty">Noch keine Aktivitäten</div></div>
+  </div>
+  <div class="rpanel-water-wrap">
+    <div class="rp-ttl">💧 Wasser heute</div>
+    <div class="wbox">
+      <div class="wgrid" id="wGlasses"></div>
+      <div class="winfo">
+        <div class="wml" id="wMl">0 ml</div>
+        <div class="wgoal">Ziel: 2.000 ml</div>
+      </div>
+      <div class="pbar"><div class="pfill" id="wBar" style="width:0%"></div></div>
+    </div>
   </div>
   <div>
     <div class="rp-ttl">🔔 Tägliche Erinnerung</div>
@@ -1531,11 +1549,17 @@ function renderActivities(){
 }
 function renderWater(){
   const y=TODAY.getFullYear(),m=TODAY.getMonth(),d=TODAY.getDate(),v=hget(y,m,d,'water');
-  document.getElementById('wGlasses').innerHTML=Array.from({length:8},(_,i)=>`<div class="wg ${i<v?'wgf':''}" onclick="clickGlass(${i})" title="Glas ${i+1}">🥛</div>`).join('');
-  document.getElementById('wMl').textContent=v*250+' ml';
-  document.getElementById('wBar').style.width=Math.min(100,v*250/2000*100)+'%';
-  const badge=document.getElementById('wBadge');
-  if(badge)badge.textContent=(v*250)+' ml / 2.000 ml';
+  const glasses=Array.from({length:8},(_,i)=>`<div class="wg ${i<v?'wgf':''}" onclick="clickGlass(${i})" title="Glas ${i+1}">🥛</div>`).join('');
+  const mlTxt=v*250+' ml', barW=Math.min(100,v*250/2000*100)+'%', badgeTxt=(v*250)+' ml / 2.000 ml';
+  // Desktop (rpanel)
+  const g=document.getElementById('wGlasses');if(g)g.innerHTML=glasses;
+  const ml=document.getElementById('wMl');if(ml)ml.textContent=mlTxt;
+  const bar=document.getElementById('wBar');if(bar)bar.style.width=barW;
+  // Mobile (main)
+  const gM=document.getElementById('wGlassesM');if(gM)gM.innerHTML=glasses;
+  const mlM=document.getElementById('wMlM');if(mlM)mlM.textContent=mlTxt;
+  const barM=document.getElementById('wBarM');if(barM)barM.style.width=barW;
+  const bdM=document.getElementById('wBadgeM');if(bdM)bdM.textContent=badgeTxt;
 }
 /* ── WEEK SELECTORS ── */
 function initWeekSelectors(){
