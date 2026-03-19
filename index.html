@@ -531,18 +531,20 @@
     .rv-pf{height:100%;background:linear-gradient(90deg,#7acc00,#b6ff56);border-radius:2px}
 
     /* ── BODY VIZ (3D Heart) ── */
-    .card-body-split{display:flex;align-items:stretch;overflow:hidden}
-    .grid-scroll{flex:1;min-width:0;overflow-x:auto;padding:14px 18px 18px}
+    .card-body-split{display:flex;align-items:stretch}
     .card-viz{
-      flex:0 0 20%;min-width:160px;
+      flex:0 0 200px;width:200px;flex-shrink:0;
       border-left:1px solid var(--border);
       position:relative;overflow:hidden;
       display:flex;flex-direction:column;
       align-items:center;justify-content:center;
       padding:6px;
-      background:linear-gradient(160deg,rgba(14,20,10,0.97) 0%,rgba(18,28,14,0.95) 100%);
-      z-index:1;
+      /* solid background so table can never show through */
+      background:#0d1509;
+      z-index:2;
     }
+    /* hard cap: grid-scroll can never reach into the heart panel */
+    .grid-scroll{flex:1;min-width:0;max-width:calc(100% - 200px);overflow-x:auto;padding:14px 18px 18px}
     .bv-svg-wrap{position:relative;width:100%}
     /* heartbeat pulse on the heart group */
     .bv-heart{
