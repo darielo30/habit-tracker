@@ -531,16 +531,17 @@
     .rv-pf{height:100%;background:linear-gradient(90deg,#7acc00,#b6ff56);border-radius:2px}
 
     /* ── BODY VIZ (3D Heart) ── */
-    .card-body-split{display:flex;align-items:stretch}
+    .card-body-split{display:flex;align-items:stretch;overflow:hidden}
     .grid-scroll{flex:1;min-width:0;overflow-x:auto;padding:14px 18px 18px}
     .card-viz{
-      flex:0 0 20%;min-width:0;
+      flex:0 0 20%;min-width:160px;
       border-left:1px solid var(--border);
       position:relative;overflow:hidden;
       display:flex;flex-direction:column;
       align-items:center;justify-content:center;
-      padding:6px 6px 6px;
-      background:linear-gradient(160deg,rgba(14,20,10,0.55) 0%,rgba(18,28,14,0.35) 100%);
+      padding:6px;
+      background:linear-gradient(160deg,rgba(14,20,10,0.97) 0%,rgba(18,28,14,0.95) 100%);
+      z-index:1;
     }
     .bv-svg-wrap{position:relative;width:100%}
     /* heartbeat pulse on the heart group */
