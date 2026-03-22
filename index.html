@@ -1540,7 +1540,8 @@ function reorderTodos(wk,fromI,toI){
   renderTodos();
 }
 function renderHeatmap(){
-  const start=new Date(Y,0,1),startDow=start.getDay(),cells=[];
+  // Mo=0 … So=6  (statt So=0 … Sa=6)
+  const start=new Date(Y,0,1),startDow=(start.getDay()+6)%7,cells=[];
   for(let i=0;i<startDow;i++)cells.push(null);
   for(let dt=new Date(start);dt.getFullYear()===Y&&dt<=TODAY;dt.setDate(dt.getDate()+1))cells.push(new Date(dt));
   while(cells.length%7!==0)cells.push(null);
@@ -1553,7 +1554,7 @@ function renderHeatmap(){
     moRow+=`<div style="width:15px;font-size:9px;color:var(--muted);flex-shrink:0">${mo?MOS[parseInt(mo[0])]:''}</div>`;
   }
   moRow+='</div>';
-  const dayLabels=['','Mo','','Mi','','Fr',''];
+  const dayLabels=['Mo','','Mi','','Fr','','So'];
   let grid='<div style="display:flex;gap:3px">';
   grid+=`<div style="display:flex;flex-direction:column;gap:3px;margin-right:5px">`;
   dayLabels.forEach(l=>grid+=`<div style="font-size:9px;color:var(--muted);height:15px;line-height:15px;width:14px;text-align:right">${l}</div>`);
