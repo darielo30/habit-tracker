@@ -1429,14 +1429,25 @@ function renderStats(){
     </div>`
   }).join('')
 }
+/* Baut Mo–So Kalenderwochen für einen Monat */
+function buildMonthWeeks(y,m){
+  const total=dim(y,m),weeks=[];
+  let d=1;
+  while(d<=total){
+    const dow=new Date(y,m,d).getDay();          // 0=So,1=Mo…6=Sa
+    const daysToSun=dow===0?0:7-dow;             // Tage bis Sonntag
+    weeks.push({s:d,e:Math.min(d+daysToSun,total),wkNum:weeks.length+1});
+    d+=daysToSun+1;
+  }
+  return weeks;
+}
 function renderGrid(){
-  const total=dim(Y,M),allWeeks=[];
-  for(let s=1;s<=total;s+=7)allWeeks.push({s,e:Math.min(s+6,total)});
+  const allWeeks=buildMonthWeeks(Y,M);
   // Week filter: only apply on mobile — desktop always shows all weeks
   const selEl=document.getElementById('gridWeekSel');
   const selWk=(window.innerWidth<=1099&&selEl)?parseInt(selEl.value)||0:0;
-  // Preserve week number for header label even when filtering
-  const weeks=allWeeks.map((w,i)=>({...w,wkNum:i+1})).filter((_,i)=>!selWk||i===selWk-1);
+  // wkNum already set by buildMonthWeeks; filter by selected week
+  const weeks=allWeeks.filter((_,i)=>!selWk||i===selWk-1);
   // Toggle compact class on grid-scroll so CSS can drop the min-width
   const gs=document.querySelector('.grid-scroll');
   if(gs)gs.classList.toggle('wk-filtered',selWk>0);
@@ -1628,22 +1639,28 @@ function renderWater(){
 }
 /* ── WEEK SELECTORS ── */
 function initWeekSelectors(){
-  const curWk=isCur()?Math.min(5,Math.ceil(TODAY.getDate()/7)):1;
-  const total=dim(Y,M),numWeeks=Math.ceil(total/7);
-  // Grid selector: dynamic options based on month
+  const weeks=buildMonthWeeks(Y,M);
+  // Find which calendar week today falls in (only relevant for current month)
+  let curWk=1;
+  if(isCur()){
+    const d=TODAY.getDate();
+    const idx=weeks.findIndex(w=>d>=w.s&&d<=w.e);
+    if(idx>=0)curWk=idx+1;
+  }
+  // Grid selector: use buildMonthWeeks for correct Mo–So ranges
   const gridSel=document.getElementById('gridWeekSel');
   if(gridSel){
     let opts='';
-    for(let i=0;i<numWeeks;i++){
-      const s=i*7+1,e=Math.min(s+6,total);
-      opts+=`<option value="${i+1}">${i===4?'Extra':'Woche '+(i+1)} (${s}.–${e}.)</option>`;
-    }
+    weeks.forEach((w,i)=>{
+      const label=(w.e-w.s)<3?'Extra':'Woche '+(i+1);
+      opts+=`<option value="${i+1}">${label} (${w.s}.–${w.e}.)</option>`;
+    });
     gridSel.innerHTML=opts;
-    gridSel.value=String(Math.min(curWk,numWeeks));
+    gridSel.value=String(Math.min(curWk,weeks.length));
   }
-  // Todo selector: always 5 options, just set value
+  // Todo selector: always 5 static options, set to current week
   const todoSel=document.getElementById('todoWeekSel');
-  if(todoSel)todoSel.value=String(curWk);
+  if(todoSel)todoSel.value=String(Math.min(curWk,5));
 }
 function renderBodyViz(){
   const y=TODAY.getFullYear(),m=TODAY.getMonth(),d=TODAY.getDate();
