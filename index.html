@@ -229,7 +229,7 @@
     /* ── TABLE ── */
     .htable{border-collapse:separate;border-spacing:0;min-width:1080px}
     .htable th{font-size:9px;font-weight:600;color:var(--muted);text-align:center;padding:2px 1px;white-space:nowrap}
-    .htable th.hn{text-align:left;width:145px;padding-right:10px;font-size:10px;color:var(--text2)}
+    .htable th.hn{text-align:left;width:145px;padding-right:10px;font-size:10px;color:var(--text2);position:sticky;left:0;z-index:3;background:var(--card-solid)}
     .htable th.hw{color:var(--text2);font-size:10px;border-bottom:2px solid rgba(182,255,86,.3);padding-bottom:5px}
     .htable th.hsep{width:8px}.htable th.he{width:50px}.htable th.hg{width:60px}
     .day-th{cursor:pointer;transition:all .15s;border-radius:6px;padding:4px 2px!important}
@@ -240,7 +240,7 @@
     .dt .dn{text-shadow:0 0 8px var(--g-glo)}
     .note-dot{display:block;width:4px;height:4px;border-radius:50%;background:var(--b);margin:2px auto 0;box-shadow:0 0 5px var(--b-glo)}
     .htable td{padding:2px 1px;text-align:center;vertical-align:middle}
-    .htable td.hn{text-align:left;font-size:12px;font-weight:500;padding-right:10px;white-space:nowrap}
+    .htable td.hn{text-align:left;font-size:12px;font-weight:500;padding-right:10px;white-space:nowrap;position:sticky;left:0;z-index:2;background:var(--card-solid)}
     .htable td.hsep{border-left:1px solid var(--border)}
     .htable td.hstrk{font-size:11px;font-weight:700;color:var(--g);padding-left:5px}
     .strk-val{animation:glowPulse 2.8s ease-in-out infinite;display:inline-block;text-shadow:0 0 10px rgba(182,255,86,0.6)}
@@ -249,6 +249,7 @@
     .htable tbody tr{border-bottom:1px solid rgba(255,255,255,0.03)}
     .htable tbody tr:last-child{border-bottom:none}
     .htable tbody tr:hover td{background:rgba(182,255,86,0.03)}
+    .htable tbody tr:hover td.hn{background:#2a3137}
     .gd{display:flex;align-items:center;gap:2px;font-size:10px}
     .gok{color:var(--g);font-weight:700}
     .gsep{color:var(--muted)}
