@@ -1011,13 +1011,13 @@
   <div class="card water-mob-card">
     <div class="card-hdr">
       <span class="card-ttl"><span class="ttl-ico">💧</span> Wasser heute</span>
-      <span class="badge" id="wBadgeM">0 ml / 2.000 ml</span>
+      <span class="badge" id="wBadgeM">0 ml / 3.000 ml</span>
     </div>
     <div style="padding:14px 18px 18px">
       <div class="wgrid" id="wGlassesM"></div>
       <div class="winfo">
         <div class="wml" id="wMlM">0 ml</div>
-        <div class="wgoal">Ziel: 2.000 ml</div>
+        <div class="wgoal">Ziel: 3.000 ml</div>
       </div>
       <div class="pbar"><div class="pfill" id="wBarM" style="width:0%"></div></div>
     </div>
@@ -1066,7 +1066,7 @@
       <div class="wgrid" id="wGlasses"></div>
       <div class="winfo">
         <div class="wml" id="wMl">0 ml</div>
-        <div class="wgoal">Ziel: 2.000 ml</div>
+        <div class="wgoal">Ziel: 3.000 ml</div>
       </div>
       <div class="pbar"><div class="pfill" id="wBar" style="width:0%"></div></div>
     </div>
@@ -1147,7 +1147,7 @@
 <script>
 /* CONFIG */
 const HABITS=[
-  {id:'water',    name:'Wasser trinken', emoji:'💧',type:'water',glassGoal:8},
+  {id:'water',    name:'Wasser trinken', emoji:'💧',type:'water',glassGoal:12},
   {id:'walk',     name:'Spazieren',       emoji:'🚶',type:'check'},
   {id:'run',      name:'Laufen',          emoji:'🏃',type:'check'},
   {id:'sport',    name:'Sport',           emoji:'💪',type:'check'},
@@ -1305,14 +1305,14 @@ function toggleCheck(y,m,d,id){
 }
 function cycleWater(y,m,d){
   if(isFut(y,m,d))return;
-  const v=hget(y,m,d,'water'),nv=(v+1)%9;
-  hset(y,m,d,'water',nv);if(nv===8)logAct('water');
+  const v=hget(y,m,d,'water'),nv=(v+1)%13;
+  hset(y,m,d,'water',nv);if(nv===12)logAct('water');
   checkConfetti(y,m,d);render();
 }
 function clickGlass(idx){
   const y=TODAY.getFullYear(),m=TODAY.getMonth(),d=TODAY.getDate();
   const cur=hget(y,m,d,'water'),nv=cur===idx+1?idx:idx+1;
-  hset(y,m,d,'water',nv);if(nv===8)logAct('water');
+  hset(y,m,d,'water',nv);if(nv===12)logAct('water');
   checkConfetti(y,m,d);render();
 }
 function changeMonth(dir){M+=dir;if(M>11){M=0;Y++}if(M<0){M=11;Y--}initWeekSelectors();render()}
@@ -1472,8 +1472,8 @@ function renderGrid(){
       for(let d=w.s;d<=w.e;d++){
         const fut=isFut(Y,M,d),tod=isT(Y,M,d);
         if(hb.type==='water'){
-          const v=hget(Y,M,d,'water'),cls='wc'+(fut?' wcf':v>=8?' wch':v>=4?' wcm':v>0?' wcl':'');
-          h+=`<td><div class="${cls}"${fut?'':` onclick="cycleWater(${Y},${M},${d})"`} title="${v}/8 Gläser">${v||''}</div></td>`
+          const v=hget(Y,M,d,'water'),cls='wc'+(fut?' wcf':v>=12?' wch':v>=6?' wcm':v>0?' wcl':'');
+          h+=`<td><div class="${cls}"${fut?'':` onclick="cycleWater(${Y},${M},${d})"`} title="${v}/12 Gläser">${v||''}</div></td>`
         }else{
           const v=hget(Y,M,d,hb.id),cls='cc'+(fut?' ccf':v?' ccd':tod?' cct':'');
           h+=`<td><div class="${cls}"${fut?'':` onclick="toggleCheck(${Y},${M},${d},'${hb.id}')"`}>${v?'✓':''}</div></td>`
@@ -1626,8 +1626,8 @@ function renderActivities(){
 }
 function renderWater(){
   const y=TODAY.getFullYear(),m=TODAY.getMonth(),d=TODAY.getDate(),v=hget(y,m,d,'water');
-  const glasses=Array.from({length:8},(_,i)=>`<div class="wg ${i<v?'wgf':''}" onclick="clickGlass(${i})" title="Glas ${i+1}">🥛</div>`).join('');
-  const mlTxt=v*250+' ml', barW=Math.min(100,v*250/2000*100)+'%', badgeTxt=(v*250)+' ml / 2.000 ml';
+  const glasses=Array.from({length:12},(_,i)=>`<div class="wg ${i<v?'wgf':''}" onclick="clickGlass(${i})" title="Glas ${i+1}">🥛</div>`).join('');
+  const mlTxt=v*250+' ml', barW=Math.min(100,v*250/3000*100)+'%', badgeTxt=(v*250)+' ml / 3.000 ml';
   // Desktop (rpanel)
   const g=document.getElementById('wGlasses');if(g)g.innerHTML=glasses;
   const ml=document.getElementById('wMl');if(ml)ml.textContent=mlTxt;
